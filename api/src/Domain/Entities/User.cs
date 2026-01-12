@@ -8,39 +8,34 @@ using SteadyLearn.Domain.Interfaces;
 public class User : IAuditableEntity
 {
     // Primary Key
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; private set; } = Guid.NewGuid();
 
     // Account Information
-    public required string Email { get; set; }
-    public required string PasswordHash { get; set; }
+    public string Email { get; private set; } = null!;
+    public string PasswordHash { get; private set; } = null!;
 
     // Profile Information
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
+    public string? FirstName { get; private set; }
+    public string? LastName { get; private set; }
 
     // Account Status
-    public UserRole Role { get; set; } = UserRole.Student;
-    public bool IsEmailVerified { get; set; } = false;
-    public DateTime? EmailVerifiedAt { get; set; }
-
-    // Authentication Tokens
-    public string? RefreshTokenHash { get; set; }
-    public DateTime? RefreshTokenExpiresAt { get; set; }
-    public string? RefreshTokenFamily { get; set; } // For token rotation tracking
+    public UserRole Role { get; private set; } = UserRole.Student;
+    public bool IsEmailVerified { get; private set; } = false;
+    public DateTimeOffset? EmailVerifiedAt { get; private set; }
 
     // Password Reset
-    public string? PasswordResetTokenHash { get; set; }
-    public DateTime? PasswordResetTokenExpiresAt { get; set; }
+    public string? PasswordResetTokenHash { get; private set; }
+    public DateTimeOffset? PasswordResetTokenExpiresAt { get; private set; }
 
     // Email Verification
-    public string? EmailVerificationTokenHash { get; set; }
-    public DateTime? EmailVerificationTokenExpiresAt { get; set; }
-
+    public string? EmailVerificationTokenHash { get; private set; }
+    public DateTimeOffset? EmailVerificationTokenExpiresAt { get; private set; }
     // Audit Fields
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
-    public DateTime? DeletedAt { get; set; }
-    public bool IsDeleted { get; set; } = false;
+    public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? UpdatedAt { get; private set; }
+    public DateTimeOffset? DeletedAt { get; private set; }
+    public bool IsDeleted { get; private set; } = false;
+
 
     /// <summary>
     /// Gets the user's full name.
@@ -51,26 +46,28 @@ public class User : IAuditableEntity
         return parts.Count > 0 ? string.Join(" ", parts) : Email;
     }
 
+    public static User Create(string email, string passwordHash, string? firstName = null, string? lastName = null, UserRole role = UserRole.Student)
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = email.ToLower().Trim(),
+            PasswordHash = passwordHash,
+            FirstName = firstName?.Trim(),
+            LastName = lastName?.Trim(),
+            Role = role,
+            CreatedAt = DateTimeOffset.UtcNow,
+            IsEmailVerified = false,
+            IsDeleted = false
+        };
+
+        return user;
+    }
+
     /// <summary>
     /// Invalidates the current refresh token (used for logout and token rotation).
     /// </summary>
-    public void InvalidateRefreshToken()
-    {
-        RefreshTokenHash = null;
-        RefreshTokenExpiresAt = null;
-        RefreshTokenFamily = null;
-    }
 
-    /// <summary>
-    /// Checks if the refresh token has expired.
-    /// </summary>
-    public bool IsRefreshTokenExpired()
-    {
-        if (RefreshTokenExpiresAt == null)
-            return true;
-
-        return DateTime.UtcNow > RefreshTokenExpiresAt;
-    }
 
     /// <summary>
     /// Checks if the email verification token has expired.
@@ -80,7 +77,7 @@ public class User : IAuditableEntity
         if (EmailVerificationTokenExpiresAt == null)
             return true;
 
-        return DateTime.UtcNow > EmailVerificationTokenExpiresAt;
+        return DateTimeOffset.UtcNow > EmailVerificationTokenExpiresAt;
     }
 
     /// <summary>
@@ -91,7 +88,7 @@ public class User : IAuditableEntity
         if (PasswordResetTokenExpiresAt == null)
             return true;
 
-        return DateTime.UtcNow > PasswordResetTokenExpiresAt;
+        return DateTimeOffset.UtcNow > PasswordResetTokenExpiresAt;
     }
 
     /// <summary>
@@ -100,9 +97,10 @@ public class User : IAuditableEntity
     public void MarkEmailAsVerified()
     {
         IsEmailVerified = true;
-        EmailVerifiedAt = DateTime.UtcNow;
+        EmailVerifiedAt = DateTimeOffset.UtcNow;
         EmailVerificationTokenHash = null;
         EmailVerificationTokenExpiresAt = null;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
@@ -122,6 +120,45 @@ public class User : IAuditableEntity
         PasswordHash = passwordHash;
         PasswordResetTokenHash = null;
         PasswordResetTokenExpiresAt = null;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetProfile(string? firstName, string? lastName)
+    {
+        FirstName = firstName?.Trim();
+        LastName = lastName?.Trim();
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetRole(UserRole role)
+    {
+        Role = role;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetEmailVerificationToken(string tokenHash, DateTimeOffset expiresAt)
+    {
+        EmailVerificationTokenHash = tokenHash;
+        EmailVerificationTokenExpiresAt = expiresAt;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetPasswordResetToken(string tokenHash, DateTimeOffset expiresAt)
+    {
+        PasswordResetTokenHash = tokenHash;
+        PasswordResetTokenExpiresAt = expiresAt;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void MarkDeleted()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = DeletedAt;
+    }
+
+    public void TouchUpdated()
+    {
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

@@ -20,7 +20,7 @@ public abstract record Result
     /// <summary>
     /// Creates a successful result with a value.
     /// </summary>
-    public static Result<T> Success<T>(T value) => new SuccessResult<T>(value);
+    public static Result<T> Success<T>(T value) => new Result<T>.SuccessResult(value);
 
     /// <summary>
     /// Creates a failed result with an error.
@@ -30,7 +30,7 @@ public abstract record Result
     /// <summary>
     /// Creates a failed result with an error.
     /// </summary>
-    public static Result<T> Failure<T>(Error error) => new FailureResult<T>(error);
+    public static Result<T> Failure<T>(Error error) => new Result<T>.FailureResult(error);
 
     /// <summary>
     /// Creates a failed result with error code and optional message.
@@ -42,7 +42,7 @@ public abstract record Result
     /// Creates a failed result with error code and optional message.
     /// </summary>
     public static Result<T> Failure<T>(string errorCode, string? message = null)
-        => new FailureResult<T>(Error.Create(errorCode, message));
+        => new Result<T>.FailureResult(Error.Create(errorCode, message));
 
     public abstract TResult Match<TResult>(
         Func<TResult> onSuccess,
@@ -144,7 +144,7 @@ public abstract record Result<T>
     public abstract Error? Error { get; }
 
     // Success Result with Value
-    private sealed record SuccessResult : Result<T>
+    public sealed record SuccessResult : Result<T>
     {
         private readonly T _value;
 
@@ -176,7 +176,7 @@ public abstract record Result<T>
     }
 
     // Failure Result with Error
-    private sealed record FailureResult : Result<T>
+    public sealed record FailureResult : Result<T>
     {
         private readonly Error _error;
 
