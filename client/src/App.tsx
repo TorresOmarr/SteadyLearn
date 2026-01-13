@@ -1,34 +1,32 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import { Layout } from './components/Layout'
+import { Hero } from './components/Hero'
+import { Footer } from './components/Footer'
+import { LoginDialog } from './features/auth/LoginDialog'
+import { RegisterDialog } from './features/auth/RegisterDialog'
+import { Value } from './features/landing/Value'
+import { type Locale } from './lib/i18n'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [locale, setLocale] = useState<Locale>('es')
+  const [loginOpen, setLoginOpen] = useState(false)
+  const [registerOpen, setRegisterOpen] = useState(false)
+
+  const toggleLocale = () => setLocale((prev) => (prev === 'es' ? 'en' : 'es'))
+  const openLogin = () => setLoginOpen(true)
+  const openRegister = () => setRegisterOpen(true)
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Layout locale={locale} onToggleLocale={toggleLocale} onLogin={openLogin} onRegister={openRegister}>
+      <div className="flex flex-col gap-16">
+        <Hero locale={locale} onStart={openRegister} />
+        <Value locale={locale} />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      <LoginDialog locale={locale} open={loginOpen} onOpenChange={setLoginOpen} />
+      <RegisterDialog locale={locale} open={registerOpen} onOpenChange={setRegisterOpen} />
+      <Footer locale={locale} />
+    </Layout>
   )
 }
 

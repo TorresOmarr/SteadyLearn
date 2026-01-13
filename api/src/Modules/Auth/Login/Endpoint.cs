@@ -21,7 +21,7 @@ public static class Endpoint
         {
             var result = await mediator.Send(command, cancellationToken);
 
-            return result.Match<IResult>(
+            return result.Match(
                 onSuccess: response =>
                 {
                     // Set refresh token as HttpOnly cookie
